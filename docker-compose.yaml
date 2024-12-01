@@ -1,0 +1,52 @@
+
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    user: root
+    ports:
+      - 27018:27017
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - web
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    networks:
+      - web
+
+  log_producer:
+    build:
+      context: .
+      dockerfile: log_producer/Dockerfile
+    command: python3 worker.py
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - redis
+    networks:
+      - web
+
+  log_consumer:
+    build:
+      context: .
+      dockerfile: log_consumer/Dockerfile
+    command: celery -A worker worker --loglevel=info -P ${CELERY_POOL}
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+
+volumes:
+  mongodb_data:
