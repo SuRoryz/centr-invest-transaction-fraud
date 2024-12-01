@@ -1,0 +1,10 @@
+gevent
+python-socketio==5.7.2
+pandas
+scikit-learn
+joblib
+nest_asyncio
+celery==5.4.0
+pymongo==4.8.0
+redis==4.5.1
+uvicorn==0.20.0
